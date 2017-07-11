@@ -1,0 +1,60 @@
+#!/bin/ksh
+
+umask 022
+echo "This file shall set up an environment for Mobility Batch. It should be ran as '. ./setupProfile'."
+
+ 
+#### UAT/PROD ####
+export BASE_DIR="$(cd $(dirname $0)/.. ; pwd)"
+export JAR_DIR="${BASE_DIR}/lib"
+export CONF_DIR="${BASE_DIR}/conf"
+
+export JAVA_HOME="/cygdrive/C/Program Files/Java/jdk1.7.0_75"
+export MARIA_DB_USERNAME="root"
+export MARIA_DB_PWD="123456"
+export MARIA_DB_SCHEMA="test"
+
+# Verify settings
+if [ ! -d "$JAR_DIR" ]
+then
+   echo "ERROR: JAR_DIR = '$JAR_DIR ' does not exist"
+fi
+if [ ! -d "$JAVA_HOME" ]
+then
+   echo "ERROR: JAVA_HOME = '$JAVA_HOME' does not exist"
+fi
+
+
+# Build up the CLASSPATH
+unset CLASSPATH
+
+
+export FILE_COUNT=`ls $JAR_DIR | wc -l `
+if [ $FILE_COUNT -ne 0 ]
+then
+    for y in \
+        ${JAR_DIR}/*.jar
+    do
+        export CLASSPATH=$CLASSPATH:$y
+    done
+fi
+
+LOG4J_FILE="${CONF_DIR}/log4j.properties"
+export CLASSPATH=$CLASSPATH:$LOG4J_FILE
+
+# Use cgypath on Cygwin to convert /cygdrive/d/ to d:/
+OS="`uname`"
+if [[ $OS = CYG* ]];
+then
+    export CLASSPATH=$(cygpath -w -p "$CLASSPATH")
+    export CONF_DIR=$(cygpath -w -p "$CONF_DIR")
+    export BASE_DIR=$(cygpath -w -p "$BASE_DIR")
+fi
+
+echo $CLASSPATH
+echo "\r\n"
+# Set the PATH
+export PATH=".:/bin:/usr/bin:/usr/sbin:${PATH}"
+export PATH="${JAVA_HOME}/bin:${PATH}"
+
+
